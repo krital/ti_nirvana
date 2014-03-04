@@ -1,0 +1,57 @@
+<html>
+<script src="http://showcase.my-channels.com/lib/js/nirvana.js"></script>
+<script>
+    // Create a session to our Nirvana server:
+var mySession = Nirvana.createSession({
+    realms: ["http://showcase.um.softwareag.com:80"],
+    username: "User" + Math.floor(Math.random() * 101)
+});
+
+mySession.start();
+
+// Get a reference to a channel to which we can subscribe and/or publish:
+var myChannel = mySession.getChannel("/tutorial/MQTTsandbox");
+
+// Subscribe to the channel so we too receive and display event data:
+myChannel.on(Nirvana.Observe.DATA, function(evt) {
+    var outputArea = document.getElementById("output");
+    outputArea.innerHTML += "<p>" + evt.getData() + "</p>";
+    outputArea.scrollTop = outputArea.scrollHeight;
+    
+    fireTitaniumEvent(evt.getData());
+});
+myChannel.subscribe();
+
+// A function to publish events containing user-supplied data:
+
+function fireTitaniumEvent(d){
+    Ti.App.fireEvent('app:fromWebView', { message: d});
+}
+
+function sendMessage(data) {
+    document.getElementById("inputMsg").value = "";
+    var event = Nirvana.createEvent();
+    event.setData(mySession.getUsername() + ":" + data);
+    myChannel.publish(event);
+    return false;
+}
+    
+</script>
+
+
+<body onload="Ti.API.info('body loaded!');">
+<div style="height:100%">
+    <div id="output">
+        <p><b>Type in the box below, and press "Send Message":</b></p>
+    </div>
+</div>
+<div id="input">
+    <form onsubmit="return sendMessage(this.inputMsg.value);">
+        <input type="text" name="inputMsg" id="inputMsg" />
+        <input type="submit" value="Send Message">
+    </form>
+</div>
+
+</body>
+</html>
+
