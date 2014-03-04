@@ -1,26 +1,65 @@
 <html>
 <script src="http://showcase.my-channels.com/lib/js/nirvana.js"></script>
 <script>
-    // Create a session to our Nirvana server:
-var mySession = Nirvana.createSession({
-    realms: ["http://showcase.um.softwareag.com:80"],
-    username: "User" + Math.floor(Math.random() * 101)
-});
+var myNick = null;
 
-mySession.start();
+var rssChannel = null;
+var stockIndicesChannel = null;
+var stockIndexTradesChannel = null;
+var chatRoomChannel = null;
 
-// Get a reference to a channel to which we can subscribe and/or publish:
-var myChannel = mySession.getChannel("/tutorial/MQTTsandbox");
+var session = Nirvana.createSession({
+        applicationName: "TradespaceJS",
+        sessionName: "TradespaceSession",
+        username: "JavaScriptTradeSpaceUser" + Math.floor(Math.random() * 101),
+        drivers: [
+            Nirvana.Driver.WEBSOCKET,
+            Nirvana.Driver.XHR_STREAMING_CORS,
+            Nirvana.Driver.XDR_STREAMING,
+            Nirvana.Driver.XDR_LONGPOLL,
+            Nirvana.Driver.XHR_LONGPOLL_CORS,
+            Nirvana.Driver.NOXD_IFRAME_STREAMING,
+            Nirvana.Driver.JSONP_LONGPOLL
+        ]       
+    });
 
-// Subscribe to the channel so we too receive and display event data:
-myChannel.on(Nirvana.Observe.DATA, function(evt) {
-    var outputArea = document.getElementById("output");
-    outputArea.innerHTML += "<p>" + evt.getData() + "</p>";
-    outputArea.scrollTop = outputArea.scrollHeight;
-    
-    fireTitaniumEvent(evt.getData());
-});
-myChannel.subscribe();
+    session.on(Nirvana.Observe.START, function (session) {
+        myNick = session.getCurrentDriver() + "-" + session.getSessionID().substr(13, 4);
+    });
+
+    session.on(Nirvana.Observe.RECONNECT, function () {
+        //Ti.API.info('')
+    });
+
+    session.on(Nirvana.Observe.DISCONNECT, function () {
+        //showUIMessage("Disconnected. Reconnecting...");
+    });
+
+    session.start();
+
+    ////////////////////////////////////////////////////////////////////
+    // Setup and subscribe to channels
+    ////////////////////////////////////////////////////////////////////
+
+    //rssChannel = session.getChannel("/fxdemo/news");
+    stockIndicesChannel = session.getChannel("/fxdemo/prices");
+    stockIndexTradesChannel = session.getChannel("/fxdemo/trades");
+    chatRoomChannel = session.getChannel("/fxdemo/chat");
+
+    //rssChannel.on(Nirvana.Observe.DATA, rssEventCB);
+    stockIndicesChannel.on(Nirvana.Observe.DATA, stockIndexEventCB);
+    stockIndexTradesChannel.on(Nirvana.Observe.DATA, stockIndexTradeEventCB);
+    chatRoomChannel.on(Nirvana.Observe.DATA, chatEventCB);
+
+    //chatRoomChannel.on(Nirvana.Observe.SUBSCRIBE, hideUIMessage);
+
+    chatRoomChannel.on(Nirvana.Observe.PUBLISH, function (responseCode) {
+        //document.getElementById("sendbutton").disabled = false;
+        //document.chatform.chatinput.focus();
+        //updateStatus("Message sent (" + responseCode + ")");
+    });
+
+    session.subscribe([stockIndicesChannel, stockIndexTradesChannel, chatRoomChannel]);
 
 // A function to publish events containing user-supplied data:
 
