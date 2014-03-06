@@ -5,6 +5,7 @@
 var EVENT_TRADE_INDEX = "app:trade_index";
 var EVENT_TRADE = "app:trade";
 var EVENT_CHAT = "app:chat";
+var EVENT_RSS = "app:rss";
 
 var EVENT_FROM_CHAT = "app:from_chat";
 var EVENT_FROM_TRADE = "app:from_trade";
@@ -18,7 +19,7 @@ Ti.App.addEventListener(EVENT_FROM_TRADE, function(e) {
 });
 
 //channels
-var chatChannel, stockIndicesChannel, stockIndexTradesChannel = null;
+var chatChannel, stockIndicesChannel, stockIndexTradesChannel, rssChannel = null;
 
 // Create a session to our Nirvana server:
 var mySession = Nirvana.createSession({
@@ -32,23 +33,40 @@ mySession.start();
 chatChannel = mySession.getChannel("/fxdemo/chat");
 stockIndicesChannel = mySession.getChannel("/fxdemo/prices");
 stockIndexTradesChannel = mySession.getChannel("/fxdemo/trades");
+rssChannel = mySession.getChannel("/fxdemo/news");
 
 //define callbacks
 stockIndicesChannel.on(Nirvana.Observe.DATA, stockIndexEventCB);
 stockIndexTradesChannel.on(Nirvana.Observe.DATA, stockIndexTradeEventCB);
 chatChannel.on(Nirvana.Observe.DATA, chatEventCB);
+rssChannel.on(Nirvana.Observe.DATA, rssEventCB);
 
 chatChannel.subscribe();
 stockIndexTradesChannel.subscribe();
 stockIndicesChannel.subscribe();
+rssChannel.subscribe();
+
+//rss callback
+function rssEventCB(event){
+    var dictionary = event.getDictionary();
+    var source = dictionary.get("chat_from");
+    var link = dictionary.get("chatmsg");
+    var when = new Date(parseInt(event.getEventAttributes().getTimeStamp(), 10));
+    var time = getDay(when) + " " + getTime(when);
+    
+    fireTitaniumEvent(EVENT_RSS, {source:source,link:link,time:time});
+}
 
 //chat callback
 function chatEventCB(evt){
     var dictionary = evt.getDictionary();
     var message = dictionary.get("message");
     var from = dictionary.get("sender");
+    var when = new Date(parseInt(evt.getEventAttributes().getTimeStamp(), 10));
+    var day = getDate(when);
+    var time = getTime(when);
     
-    fireTitaniumEvent(EVENT_CHAT, {from:from, message:message});
+    fireTitaniumEvent(EVENT_CHAT, {from:from, message:message, time:time});
 }
 
 //stock trade callback

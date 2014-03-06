@@ -27,8 +27,8 @@ function buildChatView(){
         paddingLeft:5,
         width:252,
         height:30,
-        bottom:1,
-        left:10,
+        bottom:5,
+        left:5,
         backgroundColor:'white',
         borderWidth:1,
         borderRadius:3,
@@ -42,8 +42,8 @@ function buildChatView(){
     messageSendButton = Ti.UI.createButton({
         title:'Send',
         tintColor:COLOR_LIGHT_GREEN,
-        bottom:1,
-        right:10
+        bottom:6,
+        right:12
     });
     
     messageSendButton.addEventListener('click', handleChatMessageSubmition);
@@ -56,18 +56,22 @@ function buildChatView(){
 }
 
 function handleChatMessageSubmition(e){
-    Ti.App.fireEvent(EVENT_FROM_CHAT, {from:username, message:messageField.value});
+    if(messageField.value != ''){
+        Ti.App.fireEvent(EVENT_FROM_CHAT, {from:username, message:messageField.value});
     
-    messageField.value = '';
-    messageField.blur();
-    
-    chatView.animate({bottom:0, duration:200});
-    chatTableView.animate({height:IPHONE5 ? 421 : 324, duration:200});
-    
-    //used setTimeout because sometimes, it wouldn't respond
-    var t = setTimeout(function(){
-        chatTableView.scrollToIndex(chatTableView.data[0].rows.length - 1);
-    },50);
+        messageField.value = '';
+        messageField.blur();
+        
+        chatView.animate({bottom:0, duration:200});
+        chatTableView.animate({height:IPHONE5 ? 421 : 324, duration:200});
+        
+        //used setTimeout because sometimes, it wouldn't respond
+        if(chatTableView.data && chatTableView.data[0] && chatTableView.data[0].rows != null){
+            var t = setTimeout(function(){
+                chatTableView.scrollToIndex(chatTableView.data[0].rows.length - 1);
+            },50);
+        }
+    }
 }
 
 function handleChatFieldFocus(){
@@ -75,9 +79,12 @@ function handleChatFieldFocus(){
     chatTableView.animate({height:IPHONE5 ? 236 : 140, duration:200});
     
     //used setTimeout because sometimes, it wouldn't respond
-    var t = setTimeout(function(){
-        chatTableView.scrollToIndex(chatTableView.data[0].rows.length - 1);
-    },50);
+    if(chatTableView.data && chatTableView.data[0] && chatTableView.data[0].rows != null){
+        var t = setTimeout(function(){
+            chatTableView.scrollToIndex(chatTableView.data[0].rows.length - 1);
+        },50);
+    }
+    
 }
 
 function handleChatFieldBlur(){
@@ -85,9 +92,20 @@ function handleChatFieldBlur(){
     chatTableView.animate({height:IPHONE5 ? 421 : 324, duration:200});
     
     //used setTimeout because sometimes, it wouldn't respond
-    var t = setTimeout(function(){
-        chatTableView.scrollToIndex(chatTableView.data[0].rows.length - 1);
-    },50);
+    if(chatTableView.data && chatTableView.data[0] && chatTableView.data[0].rows != null){
+        var t = setTimeout(function(){
+            chatTableView.scrollToIndex(chatTableView.data[0].rows.length - 1);
+        },50);
+    }
+}
+
+function getImageForUser(name){
+    if(name == username){
+        return 'images/iphone/avatars/1.png';
+    } else {
+        var randomNumber = Math.floor((Math.random()*9)+2); 
+        return 'images/iphone/avatars/'+randomNumber+'.png';
+    }
 }
 
 function createMessageRow(msg, time, name, myMessage){
@@ -104,7 +122,8 @@ function createMessageRow(msg, time, name, myMessage){
     var photoView, messageView, timeLabel, msgLabel = null;
     
     if(myMessage){
-        photoView = Ti.UI.createView({
+        photoView = Ti.UI.createImageView({
+            image:getImageForUser(name),
             right:2,
             top:20,
             backgroundColor:'white',
@@ -113,11 +132,13 @@ function createMessageRow(msg, time, name, myMessage){
         });
         
         timeLabel = Ti.UI.createLabel({
-            text:'2m ago',
+            text:time,
             color:'white',
             top:65,
-            right:5,
+            right:2,
+            width:40,
             textAlign:'center',
+            minimumFontSize:10,
             font:{fontSize:10, fontWeight:'bold', fontFamily:'Calibri'}
         });
         
@@ -133,8 +154,8 @@ function createMessageRow(msg, time, name, myMessage){
             borderRadius:5
         });
         
-        msgLabel = Ti.UI.createLabel({
-            text:msg,
+        nameLabel = Ti.UI.createLabel({
+            text:name,
             color:'white',
             top:5,
             bottom:5,
@@ -143,12 +164,28 @@ function createMessageRow(msg, time, name, myMessage){
             color:'black',
             height:'auto',
             width:'auto',//184
-            textAlign:'left',
+            textAlign:'right',
+            opacity:0.7,
+            font:{fontSize:12, fontWeight:'bold', fontFamily:'Calibri'}
+        });
+        
+        msgLabel = Ti.UI.createLabel({
+            text:msg,
+            color:'white',
+            top:18,
+            bottom:5,
+            left:10,
+            right:10,
+            color:'black',
+            height:'auto',
+            width:'auto',//184
+            textAlign:'right',
             opacity:0.7,
             font:{fontSize:12, fontWeight:'regular', fontFamily:'Calibri'}
         });
     } else {
-        photoView = Ti.UI.createView({
+        photoView = Ti.UI.createImageView({
+            image:getImageForUser(name),
             left:2,
             top:20,
             backgroundColor:'white',
@@ -157,11 +194,13 @@ function createMessageRow(msg, time, name, myMessage){
         });
         
         timeLabel = Ti.UI.createLabel({
-            text:'2m ago',
+            text:time,
             color:'white',
             top:65,
-            left:5,
+            width:40,
+            left:2,
             textAlign:'center',
+            minimumFontSize:10,
             font:{fontSize:10, fontWeight:'bold', fontFamily:'Calibri'}
         });
         
@@ -177,10 +216,25 @@ function createMessageRow(msg, time, name, myMessage){
             borderRadius:5
         });
         
+        nameLabel = Ti.UI.createLabel({
+            text:name,
+            color:'white',
+            top:5,
+            bottom:5,
+            left:10,
+            right:10,
+            color:'black',
+            height:'auto',
+            width:'auto',//184
+            textAlign:'left',
+            opacity:0.7,
+            font:{fontSize:12, fontWeight:'bold', fontFamily:'Calibri'}
+        });
+        
         msgLabel = Ti.UI.createLabel({
             text:msg,
             color:'white',
-            top:5,
+            top:18,
             bottom:5,
             left:10,
             right:10,
@@ -193,6 +247,7 @@ function createMessageRow(msg, time, name, myMessage){
         });
     }
     
+    msgLabelContainer.add(nameLabel);
     msgLabelContainer.add(msgLabel);
         
     row.add(photoView);

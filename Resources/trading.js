@@ -9,6 +9,7 @@ function buildTradingView(){
     tradingIndextableView = Ti.UI.createTableView({
         top:10,
         bottom:0,
+        width:'100%',
         separatorStyle:Ti.UI.iPhone.TableViewSeparatorStyle.NONE,
         backgroundColor:'transparent'
     });
