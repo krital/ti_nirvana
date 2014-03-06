@@ -1,7 +1,26 @@
 <html>
 <script src="http://showcase.my-channels.com/lib/js/nirvana.js"></script>
 <script>
-    // Create a session to our Nirvana server:
+//Webview - titanium event types
+var EVENT_TRADE_INDEX = "app:trade_index";
+var EVENT_TRADE = "app:trade";
+var EVENT_CHAT = "app:chat";
+
+var EVENT_FROM_CHAT = "app:from_chat";
+var EVENT_FROM_TRADE = "app:from_trade";
+
+Ti.App.addEventListener(EVENT_FROM_CHAT, function(e) {
+    sendMessage(e.from, e.message);
+});
+
+Ti.App.addEventListener(EVENT_FROM_TRADE, function(e) {
+    alert(e.message);
+});
+
+//channels
+var chatChannel, stockIndicesChannel, stockIndexTradesChannel = null;
+
+// Create a session to our Nirvana server:
 var mySession = Nirvana.createSession({
     realms: ["http://showcase.um.softwareag.com"],
     username: "iOS" + Math.floor(Math.random() * 101)
@@ -9,40 +28,99 @@ var mySession = Nirvana.createSession({
 
 mySession.start();
 
-// Get a reference to a channel to which we can subscribe and/or publish:
-var myChannel = mySession.getChannel("/fxdemo/chat");
+// Get a reference to the channels to which we can subscribe and/or publish:
+chatChannel = mySession.getChannel("/fxdemo/chat");
+stockIndicesChannel = mySession.getChannel("/fxdemo/prices");
+stockIndexTradesChannel = mySession.getChannel("/fxdemo/trades");
 
-// Subscribe to the channel so we too receive and display event data:
-myChannel.on(Nirvana.Observe.DATA, function(evt) {
+//define callbacks
+stockIndicesChannel.on(Nirvana.Observe.DATA, stockIndexEventCB);
+stockIndexTradesChannel.on(Nirvana.Observe.DATA, stockIndexTradeEventCB);
+chatChannel.on(Nirvana.Observe.DATA, chatEventCB);
+
+chatChannel.subscribe();
+stockIndexTradesChannel.subscribe();
+stockIndicesChannel.subscribe();
+
+//chat callback
+function chatEventCB(evt){
     var dictionary = evt.getDictionary();
     var message = dictionary.get("message");
     var from = dictionary.get("sender");
     
-    //alert(message);
-    
-    var outputArea = document.getElementById("output");
-    outputArea.innerHTML += "<p>" + evt.getData() + "</p>";
-    outputArea.scrollTop = outputArea.scrollHeight;
-    
-    fireTitaniumEvent(JSON.stringify(evt));
-});
-myChannel.subscribe();
-
-// A function to publish events containing user-supplied data:
-
-function fireTitaniumEvent(d){
-    Ti.App.fireEvent('app:fromWebView', { message: d});
+    fireTitaniumEvent(EVENT_CHAT, {from:from, message:message});
 }
 
-function sendMessage(data) {
-    document.getElementById("inputMsg").value = "";
+//stock trade callback
+function stockIndexTradeEventCB(event){
+    var dictionary = event.getDictionary();
+    
+    var trader = dictionary.get("trader");
+    var buyCCY = dictionary.get("buyCCY");
+    var sellCCY = dictionary.get("sellCCY");
+    var buyAmount = dictionary.get("buyAmount");
+    var sellAmount = dictionary.get("sellAmount");
+    var rate = dictionary.get("rate");
+    var when = new Date(parseInt(event.getEventAttributes().getTimeStamp(), 10));
+    var time = getTime(when);
+    
+    fireTitaniumEvent(EVENT_TRADE, {trader:trader,buyCCY:buyCCY,sellCCY:sellCCY,buyAmount:buyAmount,sellAmount:sellAmount,rate:rate,when:when,time:time});
+}
+
+//stock index callback
+function stockIndexEventCB(event){
+    var dictionary = event.getDictionary();
+
+    var bid = dictionary.get("bid");
+    var offer = dictionary.get("offer");
+    var indexName = dictionary.get("name");
+    var indexNameClean = indexName.replace("/", "");
+    
+    fireTitaniumEvent(EVENT_TRADE_INDEX, {indexName:indexName, indexNameClean:indexNameClean, bid:bid, offer:offer});
+}
+
+// A function to publish events containing user-supplied data:
+function fireTitaniumEvent(eventType, data){
+    Ti.App.fireEvent(eventType, data);
+}
+
+function sendMessage(sender, message) {
     var event = Nirvana.createEvent();
     
-    data = 'HARDCODED';
-    
-    event.setData(mySession.getUsername() + ":" + data);
-    myChannel.publish(event);
+    var dictionary = event.getDictionary();
+    dictionary.putString("sender", sender);
+    dictionary.putString("message", message);
+    chatChannel.publish(event);
+   
     return false;
+}
+
+////////////////////////////////////////////////////////////////////
+// Date formatting functions:
+////////////////////////////////////////////////////////////////////
+function prefixZero(x) {
+    if ( x < 0 || x > 9 ) {
+        return x;
+    }
+    return "0" + x;
+}
+
+function getDay(date) { 
+    var days = new Array('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
+    return days[date.getDay()];
+}
+
+function getTime(date) { 
+        return prefixZero(date.getHours()) + ":" + prefixZero(date.getMinutes());
+}
+
+function getDate(date) {
+    var months = new Array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
+    var year = date.getYear();
+    if (year.length < 4) {
+        year = "" + (year - 0 + 1900);
+    }
+    return date.getDate() + " " + months[date.getMonth()] + " " + year;
 }
 </script>
 
