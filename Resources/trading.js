@@ -18,15 +18,25 @@ function buildTradingView(){
 }
 
 function createTradingRow(indexTitle, bidAmount, offerAmount){
- 
+    //bidAmount = Math.round((bidAmount*10)/10);
+    
+    Ti.API.info('createTradingRow() for bid '+bidAmount+' and offer '+offerAmount);
+    bidAmount = bidAmount.toString();
+    offerAmount = offerAmount.toString();
+    
     //formatting
     if(bidAmount.length >= 5){
-        bidAmount = bidAmount.substring(0,5);
+        Ti.API.info('substring bid '+bidAmount);
+        bidAmount = bidAmount.substring(0,7);
     }
     
     if(offerAmount.length >= 5){
-        offerAmount = offerAmount.substring(0,5);
+        Ti.API.info('substring offer '+offerAmount);
+        offerAmount = offerAmount.substring(0,7);
     }
+    
+    while(offerAmount.length<7){offerAmount=offerAmount+"0";}
+    while(bidAmount.length<7){bidAmount=bidAmount+"0";}
     
     //bidAmount = parseFloat(bidAmount.toFixed(5));
     //offerAmount = parseFloat(offerAmount.toFixed(5));
@@ -58,6 +68,11 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
                 } else {
                     targetColorOffer = COLOR_LIGHT_RED;
                 }
+                
+                //bid
+                row.getChildren()[1].getChildren()[0].text = bidAmount;
+                //offer
+                row.getChildren()[2].getChildren()[0].text = offerAmount;
                 
                 row.getChildren()[1].animate({backgroundColor:targetColorBid, duration:200}, function(){
                    setTimeout(function(){

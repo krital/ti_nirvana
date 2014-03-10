@@ -57,6 +57,7 @@ function buildChatView(){
 
 function handleChatMessageSubmition(e){
     if(messageField.value != ''){
+        var username = getUserObject().fname;
         Ti.App.fireEvent(EVENT_FROM_CHAT, {from:username, message:messageField.value});
     
         messageField.value = '';
@@ -100,6 +101,8 @@ function handleChatFieldBlur(){
 }
 
 function getImageForUser(name){
+    var username = getUserObject().fname;
+    
     if(name == username){
         return 'images/iphone/avatars/1.png';
     } else {
@@ -109,6 +112,8 @@ function getImageForUser(name){
 }
 
 function createMessageRow(msg, time, name, myMessage){
+    var username = getUserObject().fname;
+    
     if(name == username){
         myMessage = true;
     }

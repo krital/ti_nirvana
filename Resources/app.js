@@ -3,12 +3,15 @@ Ti.include('trading.js');
 Ti.include('chat.js');
 Ti.include('news.js');
 Ti.include('utils.js');
+Ti.include('dao.js');
 
 //device detection
 var IPHONE5 = false;
 if(Ti.Platform.displayCaps.platformHeight == 568){
     IPHONE5 = true; 
 }
+
+var IMAGE_PATH = 'images/iphone/';
 
 //modules
 
@@ -27,13 +30,11 @@ var COLOR_LIGHT_GREEN = '#a9d86e';
 var COLOR_LIGHT_RED = '#ff6c60';
 var COLOR_DARK_GRAY = 'black';
 
-var username = 'Jason Kritikos';
-
 // this sets the background color of the master UIView (when there are no windows/tab groups on it)
 Titanium.UI.setBackgroundColor('#000');
 
 // create tab group
-var tabGroup = Titanium.UI.createTabGroup();
+var tabGroup = Titanium.UI.createTabGroup({tintColor:'white', tabsBackgroundColor:COLOR_DARK_GRAY});
 
 Ti.App.addEventListener(EVENT_RSS, function(e) {
     //Ti.API.info('webview rss: '+JSON.stringify(e));
@@ -114,7 +115,7 @@ win2.add(buildTradingView());
 
 //trading reorder button
 var tradingReorderButton = Ti.UI.createButton({
-    title:'Edit',
+    title:'Reorder',
     color:'white',
     tintColor:'#ffffff'
 });
@@ -123,12 +124,30 @@ var tradingReorderButton = Ti.UI.createButton({
 tradingReorderButton.addEventListener('click', function(){
    if(tradingIndextableView.moving == true){
        tradingIndextableView.moving = false;
+       tradingReorderButton.title = 'Reorder';
    } else {
        tradingIndextableView.moving = true;
+       tradingReorderButton.title = 'Done';
    }
 });
 
 win2.setRightNavButton(tradingReorderButton);
+
+var tradingButton = Ti.UI.createButton({
+    title:'Demo',
+    color:'white',
+    tintColor:'#ffffff'
+});
+
+tradingButton.addEventListener('click', function(){
+   var chartView = Ti.UI.createWebView({
+       url:'charts/examples/line-markers/index.htm'
+   });
+   
+   win2.add(chartView);
+});
+
+win2.setLeftNavButton(tradingButton);
 
 var tab2 = Titanium.UI.createTab({  
     icon:'images/iphone/tabs/chart_up.png',
@@ -162,5 +181,16 @@ tabGroup.addTab(tab1);
 tabGroup.addTab(tab2);  
 tabGroup.addTab(tab3);  
 
-// open tab group
-tabGroup.open();
+//Check for persisted user
+var userObject = getUserObject();
+if(!userObject.fname){
+    var initialWindow = buildInitialWindow();
+
+    var navigationWindow = Titanium.UI.iOS.createNavigationWindow({
+       window: initialWindow
+    });
+    
+    navigationWindow.open();    
+} else {
+    tabGroup.open();
+}
