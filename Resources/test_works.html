@@ -15,7 +15,7 @@ Ti.App.addEventListener(EVENT_FROM_CHAT, function(e) {
 });
 
 Ti.App.addEventListener(EVENT_FROM_TRADE, function(e) {
-    alert(e.message);
+    sendTradeAction(e.name, e.action, e.size, e.price, e.rate,e.buyCCY,e.sellCCY);
 });
 
 //channels
@@ -110,6 +110,30 @@ function sendMessage(sender, message) {
     dictionary.putString("message", message);
     chatChannel.publish(event);
    
+    return false;
+}
+
+function sendTradeAction(name, action, size, price, rate,buyCCY,sellCCY){
+    var evt = Nirvana.createEvent();
+    var dict = evt.getDictionary();
+    
+    dict.putString("trader", name);
+    if(action=="sell"){
+        dict.putString("sellAmount", size);
+        dict.putString("buyAmount", Math.round(size*price*100)/100);    
+    }
+    else{
+        dict.putString("sellAmount", Math.round(size*price*100)/100);   
+        dict.putString("buyAmount", size);
+    }
+    
+    dict.putString("buyCCY",buyCCY);
+    dict.putString("sellCCY",sellCCY);
+    dict.putDouble("rate", price);
+    
+    evt.setTag("tradeevent");
+    stockIndexTradesChannel.publish(evt);
+    
     return false;
 }
 

@@ -18,6 +18,8 @@ function buildTradingView(){
         backgroundColor:'transparent'
     });
     
+    tradingIndextableView.addEventListener('click', handleTradeAction);
+    
     tradingHistorytableView = Ti.UI.createTableView({
         top:IPHONE5 ? 300 : 240,
         bottom:0,
@@ -31,6 +33,38 @@ function buildTradingView(){
     tradeView.add(tradingHistorytableView);
     
     return tradeView;
+}
+
+//Event handler for trade actions
+function handleTradeAction(e){
+    //Ti.API.info('handleTradeAction() called with action '+JSON.stringify(e));
+    
+    e.row.children[3].blur();
+    
+    var action,size,price,rate,buyCCY,sellCCY = null;
+    if(e.source.tradeAction == 1){
+        action = 'buy';
+    } else if(e.source.tradeAction == 2){
+        action = 'sell';
+    }
+    
+    var indexTitle = e.row.tradeIndexTitle;
+    var indexTitle2 = e.row.tradeIndexTitle;
+    //Ti.API.info('------ '+indexTitle);
+    
+    size = e.row.children[3].value;
+    var bid = e.row.bid;
+    var offer = e.row.offer;
+    buyCCY = indexTitle.substring(0,3);
+    sellCCY = indexTitle2.substring(4,7);
+    
+    //Ti.API.info('------ '+sellCCY);
+    
+    var username = getUserObject().fname;
+    
+    if(size != ''){
+        Ti.App.fireEvent(EVENT_FROM_TRADE, {name:username, action:action, size:size, price:offer, rate:bid, buyCCY:buyCCY,sellCCY:sellCCY});    
+    }
 }
 
 function createTradingHistoryRow(trader, time, rate, buyAmount, buyCCY, sellAmount, sellCCY){
@@ -200,6 +234,8 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
         
     } else {
         //Ti.API.info('Creating trading index '+indexTitle+' tradingIndexes is '+tradingIndexes);
+        var bCCY = indexTitle.substring(0,3);
+        var sCCY = indexTitle.substring(3,3);
         
         var row = Ti.UI.createTableViewRow({
             height:100,
@@ -207,7 +243,9 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
             width:'90%',
             tradeIndexTitle:indexTitle,
             bid:bidAmount,
-            offer:offerAmount
+            offer:offerAmount,
+            buyCCY:bCCY,
+            sellCCY:sCCY
         });
         
         var title = Ti.UI.createLabel({
@@ -219,10 +257,11 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
         });
         
         var boxAsk = Ti.UI.createView({
-            left:75,
+            left:65,
             backgroundColor:'black',
             width:80,
-            height:60
+            height:60,
+            tradeAction:1
         });
         
         var askLabel = Ti.UI.createLabel({
@@ -245,10 +284,11 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
         boxAsk.add(askLabel);
     
         var boxBid = Ti.UI.createView({
-            right:75,
+            right:65,
             backgroundColor:'black',
             width:80,
-            height:60
+            height:60,
+            tradeAction:2
         });
         
         var bidLabel = Ti.UI.createLabel({
@@ -273,12 +313,13 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
         var amountField = Ti.UI.createTextField({
             backgroundColor:'#fafafa',
             value:'',
-            hintText:'unit amount',
+            hintText:'Unit amount',
             top:75,
-            left:75,
+            height:20,
+            left:65,
             appearance:Titanium.UI.KEYBOARD_APPEARANCE_ALERT,
-            right:75,
-            font:{fontSize:12, fontWeight:'regular', fontFamily:'Calibri'}
+            right:65,
+            font:{fontSize:13, fontWeight:'regular', fontFamily:'Calibri'}
         });
     
         row.add(title);
