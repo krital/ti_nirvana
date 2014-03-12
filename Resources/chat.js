@@ -29,6 +29,7 @@ function buildChatView(){
         height:30,
         bottom:5,
         left:5,
+        appearance:Titanium.UI.KEYBOARD_APPEARANCE_ALERT,
         backgroundColor:'white',
         borderWidth:1,
         borderRadius:3,
@@ -97,17 +98,6 @@ function handleChatFieldBlur(){
         var t = setTimeout(function(){
             chatTableView.scrollToIndex(chatTableView.data[0].rows.length - 1);
         },50);
-    }
-}
-
-function getImageForUser(name){
-    var username = getUserObject().fname;
-    
-    if(name == username){
-        return 'images/iphone/avatars/1.png';
-    } else {
-        var randomNumber = Math.floor((Math.random()*9)+2); 
-        return 'images/iphone/avatars/'+randomNumber+'.png';
     }
 }
 

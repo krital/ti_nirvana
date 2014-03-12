@@ -61,3 +61,19 @@ function buildInitialWindow(){
 
     return initialWindow;
 }
+
+function getImageForUser(name){
+    var username = getUserObject().fname;
+    
+    if(name == username){
+        return 'images/iphone/avatars/1.png';
+    } else {
+        var randomNumber = Math.floor((Math.random()*9)+2); 
+        
+        if(randomNumber < 2 || randomNumber > 9){
+            randomNumber = 1;
+        }
+        
+        return 'images/iphone/avatars/'+randomNumber+'.png';
+    }
+}

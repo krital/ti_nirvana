@@ -3,35 +3,144 @@ var tradingIndexes = '';
 
 //UI components
 var tradingIndexesTableData = [];
-var tradingIndextableView = null;
+var tradingIndextableView, tradingHistorytableView = null;
 
 function buildTradingView(){
+    var tradeView = Ti.UI.createView({  
+    });
+    
     tradingIndextableView = Ti.UI.createTableView({
         top:10,
-        bottom:0,
+        bottom:IPHONE5 ? 155 : 140,
         width:'100%',
         separatorStyle:Ti.UI.iPhone.TableViewSeparatorStyle.NONE,
+        selectionStyle:Ti.UI.iPhone.TableViewCellSelectionStyle.NONE,
         backgroundColor:'transparent'
     });
     
-    return tradingIndextableView;
+    tradingHistorytableView = Ti.UI.createTableView({
+        top:IPHONE5 ? 300 : 240,
+        bottom:0,
+        width:'100%',
+        separatorStyle:Ti.UI.iPhone.TableViewSeparatorStyle.NONE,
+        selectionStyle:Ti.UI.iPhone.TableViewCellSelectionStyle.NONE,
+        backgroundColor:'transparent'
+    });
+    
+    tradeView.add(tradingIndextableView);
+    tradeView.add(tradingHistorytableView);
+    
+    return tradeView;
+}
+
+function createTradingHistoryRow(trader, time, rate, buyAmount, buyCCY, sellAmount, sellCCY){
+    var rateAmount = rate.toString();
+    
+    //formatting
+    if(rateAmount.length >= 5){
+        //Ti.API.info('substring bid '+bidAmount);
+        rateAmount = rateAmount.substring(0,7);
+    }
+    
+    var msg = trader + " bought "+buyAmount+' of '+buyCCY+', sold '+sellAmount+' of '+sellCCY+' at a rate of '+rateAmount;
+    
+    var row = Ti.UI.createTableViewRow({
+        height:60,
+        backgroundColor:'transparent',
+        width:'90%'
+    });
+    
+    photoView = Ti.UI.createImageView({
+        image:getImageForUser(trader),
+        left:2,
+        //top:20,
+        backgroundColor:'white',
+        width:35,
+        height:35
+    });
+    
+    timeLabel = Ti.UI.createLabel({
+        text:time,
+        color:'white',
+        bottom:1,
+        left:2,
+        width:35,
+        textAlign:'center',
+        minimumFontSize:10,
+        font:{fontSize:10, fontWeight:'bold', fontFamily:'Calibri'}
+    });
+    
+    var msgLabelContainer = Titanium.UI.createView({
+        backgroundColor:'transparent',
+        //top:20,
+        //bottom:15,
+        left:53,
+        right:10,
+        width:Titanium.UI.SIZE,//214
+        height:Titanium.UI.SIZE,
+        borderWidth:1,
+        borderColor:COLOR_LIGHT_GREEN,
+        borderRadius:5
+    });
+    
+    nameLabel = Ti.UI.createLabel({
+        text:trader,
+        color:'white',
+        top:5,
+        bottom:5,
+        left:10,
+        right:10,
+        color:'black',
+        height:'auto',
+        width:'auto',//184
+        textAlign:'right',
+        opacity:0.7,
+        font:{fontSize:12, fontWeight:'bold', fontFamily:'Calibri'}
+    });
+        
+    msgLabel = Ti.UI.createLabel({
+        text:msg,
+        color:'white',
+        top:5,
+        bottom:5,
+        left:10,
+        right:10,
+        height:'auto',
+        width:'auto',//184
+        textAlign:'left',
+        //opacity:0.7,
+        font:{fontSize:12, fontWeight:'regular', fontFamily:'Calibri'}
+    });
+    
+    //msgLabelContainer.add(nameLabel);
+    msgLabelContainer.add(msgLabel);
+        
+    row.add(photoView);
+    row.add(timeLabel);
+    row.add(msgLabelContainer);
+    
+    if(tradingHistorytableView.data[0] && tradingHistorytableView.data[0].rows && tradingHistorytableView.data[0].rows.length > 1){
+        tradingHistorytableView.insertRowBefore(0, row);
+    }else{
+        tradingHistorytableView.appendRow(row);
+    }
 }
 
 function createTradingRow(indexTitle, bidAmount, offerAmount){
     //bidAmount = Math.round((bidAmount*10)/10);
     
-    Ti.API.info('createTradingRow() for bid '+bidAmount+' and offer '+offerAmount);
+    //Ti.API.info('createTradingRow() for bid '+bidAmount+' and offer '+offerAmount);
     bidAmount = bidAmount.toString();
     offerAmount = offerAmount.toString();
     
     //formatting
     if(bidAmount.length >= 5){
-        Ti.API.info('substring bid '+bidAmount);
+        //Ti.API.info('substring bid '+bidAmount);
         bidAmount = bidAmount.substring(0,7);
     }
     
     if(offerAmount.length >= 5){
-        Ti.API.info('substring offer '+offerAmount);
+        //Ti.API.info('substring offer '+offerAmount);
         offerAmount = offerAmount.substring(0,7);
     }
     
@@ -93,7 +202,7 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
         //Ti.API.info('Creating trading index '+indexTitle+' tradingIndexes is '+tradingIndexes);
         
         var row = Ti.UI.createTableViewRow({
-            height:80,
+            height:100,
             backgroundColor:'transparent',
             width:'90%',
             tradeIndexTitle:indexTitle,
@@ -113,7 +222,7 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
             left:75,
             backgroundColor:'black',
             width:80,
-            height:40
+            height:60
         });
         
         var askLabel = Ti.UI.createLabel({
@@ -121,15 +230,15 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
             color:'white',
             top:2,
             textAlign:'center',
-            font:{fontSize:10, fontWeight:'bold', fontFamily:'Calibri'}
+            font:{fontSize:12, fontWeight:'bold', fontFamily:'Calibri'}
         });
         
         var askPriceLabel = Ti.UI.createLabel({
             text:offerAmount,
             color:'white',
-            //top:10,
+            bottom:10,
             textAlign:'center',
-            font:{fontSize:12, fontWeight:'regular', fontFamily:'Calibri'}
+            font:{fontSize:20, fontWeight:'bold', fontFamily:'Calibri'}
         });
         
         boxAsk.add(askPriceLabel);
@@ -139,7 +248,7 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
             right:75,
             backgroundColor:'black',
             width:80,
-            height:40
+            height:60
         });
         
         var bidLabel = Ti.UI.createLabel({
@@ -147,15 +256,15 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
             color:'white',
             top:2,
             textAlign:'center',
-            font:{fontSize:10, fontWeight:'bold', fontFamily:'Calibri'}
+            font:{fontSize:12, fontWeight:'bold', fontFamily:'Calibri'}
         });
         
         var bidPriceLabel = Ti.UI.createLabel({
             text:bidAmount,
             color:'white',
-            //top:10,
+            bottom:10,
             textAlign:'center',
-            font:{fontSize:12, fontWeight:'regular', fontFamily:'Calibri'}
+            font:{fontSize:20, fontWeight:'bold', fontFamily:'Calibri'}
         });
         
         boxBid.add(bidPriceLabel);
@@ -165,8 +274,9 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
             backgroundColor:'#fafafa',
             value:'',
             hintText:'unit amount',
-            top:55,
+            top:75,
             left:75,
+            appearance:Titanium.UI.KEYBOARD_APPEARANCE_ALERT,
             right:75,
             font:{fontSize:12, fontWeight:'regular', fontFamily:'Calibri'}
         });

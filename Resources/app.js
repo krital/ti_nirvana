@@ -1,3 +1,5 @@
+var ENABLE_TAB_IOT = true;
+
 //imports
 Ti.include('trading.js');
 Ti.include('chat.js');
@@ -36,18 +38,26 @@ Titanium.UI.setBackgroundColor('#000');
 // create tab group
 var tabGroup = Titanium.UI.createTabGroup({tintColor:'white', tabsBackgroundColor:COLOR_DARK_GRAY});
 
+var totalRSSFeeds = 0;
+var initialisedRSS = false;
 Ti.App.addEventListener(EVENT_RSS, function(e) {
     //Ti.API.info('webview rss: '+JSON.stringify(e));
+    
+    totalRSSFeeds++;
+    if(totalRSSFeeds >= 150){
+        initialisedRSS = true;
+    }
     
     var source = e.source;
     var link = e.link;
     var time = e.time;
     createNewsRow(source, link, time);
     
-    if(!tab3.active){
-        tab3.setBadge(tab3.getBadge() + 1);
+    if(initialisedRSS){
+        if(!tab3.active){
+            tab3.setBadge(tab3.getBadge() + 1);
+        }
     }
-    
 });
 
 Ti.App.addEventListener(EVENT_TRADE_INDEX, function(e) {
@@ -62,6 +72,17 @@ Ti.App.addEventListener(EVENT_TRADE_INDEX, function(e) {
 
 Ti.App.addEventListener(EVENT_TRADE, function(e) {
     //Ti.API.info('webview trade: '+JSON.stringify(e));
+    
+    var trader = e.trader;
+    var sellCCY = e.sellCCY;
+    var when = e.when;
+    var rate = e.rate;
+    var time = e.time;
+    var buyAmount = e.buyAmount;
+    var sellAmount = e.sellAmount;
+    var buyCCY = e.buyCCY;
+    
+    createTradingHistoryRow(trader, time, rate, buyAmount, buyCCY, sellAmount, sellCCY);
 });
 
 Ti.App.addEventListener(EVENT_CHAT, function(e) {
@@ -180,6 +201,26 @@ win3.add(buildNewsView());
 tabGroup.addTab(tab1);  
 tabGroup.addTab(tab2);  
 tabGroup.addTab(tab3);  
+
+var win4, tab4 = null;
+if(ENABLE_TAB_IOT){
+    // create controls tab and root window
+    win4 = Titanium.UI.createWindow({  
+        title:'IOT',
+        tintColor:'white',
+        barColor:COLOR_LIGHT_BLUE,
+        statusBarStyle:Titanium.UI.iPhone.StatusBar.LIGHT_CONTENT,
+        backgroundColor:COLOR_BG
+    });
+    
+    tab4 = Titanium.UI.createTab({  
+        icon:'images/iphone/tabs/mobile_signal.png',
+        title:'IOT',
+        window:win4
+    });
+    
+    tabGroup.addTab(tab4); 
+}
 
 //Check for persisted user
 var userObject = getUserObject();

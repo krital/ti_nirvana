@@ -17,10 +17,14 @@ function buildNewsView(){
         minRowHeight:50
     });
     
+    /*
     newsTableView.footerView = Ti.UI.createView({
         height: 1,
         backgroundColor: 'transparent'
     });
+    */
+   
+    newsTableView.addEventListener('click', handleNewsTableClick);
     
     newsView.add(newsTableView);
     
@@ -40,20 +44,78 @@ function getImageForNewsSource(name){
         return 'images/iphone/news/week.jpg';
     } else if(name.toLowerCase() == 'skynews'){
         return 'images/iphone/news/skynews.jpg';
+    } else if(name.toLowerCase() == 'retailbulletin'){
+        return 'images/iphone/news/retailbulletin.jpg';
+    } else if(name.toLowerCase() == 'bbc'){
+        return 'images/iphone/news/bbc.jpg';
+    } 
+}
+
+function handleNewsTableClick(e){    
+    //close button
+    var closeButton = Ti.UI.createButton({
+        title:'Close',
+        color:'white',
+        tintColor:'white'
+    });
+    
+    var win = Ti.UI.createWindow({
+        backgroundColor: 'blue',
+        title:'News',
+        barColor:COLOR_LIGHT_BLUE,
+        rightNavButton:closeButton,
+        statusBarStyle:Titanium.UI.iPhone.StatusBar.LIGHT_CONTENT,
+        tintColor:'white'
+    });
+    
+    closeButton.addEventListener('click', function(){
+       navWin.close(); 
+    });
+    
+    var webview = Ti.UI.createWebView({
+        url:e.row.url
+    });
+    
+    win.add(webview);
+    
+    var navWin = Ti.UI.iOS.createNavigationWindow({
+        modal: true,
+        window: win,
+        tintColor:'white',
+        statusBarStyle:Titanium.UI.iPhone.StatusBar.LIGHT_CONTENT
+    });
+    navWin.open();
+}
+
+function handleNewsTableClick2(e){
+    Ti.API.info('handleNewsTableClick() called');
+    if(e.row.toggle){
+        e.row.height = 75;
+    } else {
+        e.row.height = 180;
+        
+        var webview = Ti.UI.createWebView({
+            url:e.row.url,
+            width:'80%',
+            height:'80%'
+        });
+        
+        e.row.add(webview);
     }
 }
 
 function createNewsRow(source, link, time){
-    
     var tmp = link.split("\"");
     
     var newsTitle = tmp[3].trim();
     var newsLink = tmp[5].trim();
     
     var row = Ti.UI.createTableViewRow({
-        //height:75,
+        height:75,
         backgroundColor:'transparent',
-        width:'90%'
+        width:'90%',
+        toggle:false,
+        url:newsLink
     });
     
     var photoView = Ti.UI.createImageView({

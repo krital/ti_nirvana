@@ -1,8 +1,8 @@
-#appname: messaging
-#publisher: jace
-#url: http://
-#image: appicon.png
-#appid: com.veladia.messaging
-#desc: undefined
-#type: ipad
-#guid: 5ae2aaf7-804c-425a-a3a0-d93f1d4b847c
+#appname:messaging
+#publisher:jace
+#url:http://
+#image:appicon.png
+#appid:com.veladia.beacon
+#desc:not specified
+#type:ipad
+#guid:5ae2aaf7-804c-425a-a3a0-d93f1d4b847c
