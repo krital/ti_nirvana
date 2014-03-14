@@ -6,6 +6,7 @@ Ti.include('chat.js');
 Ti.include('news.js');
 Ti.include('utils.js');
 Ti.include('dao.js');
+Ti.include('iot.js');
 
 //device detection
 var IPHONE5 = false;
@@ -15,15 +16,17 @@ if(Ti.Platform.displayCaps.platformHeight == 568){
 
 var IMAGE_PATH = 'images/iphone/';
 
-//modules
-
 //Webview - titanium event types
 var EVENT_TRADE_INDEX = "app:trade_index";
 var EVENT_TRADE = "app:trade";
 var EVENT_CHAT = "app:chat";
 var EVENT_RSS = "app:rss";
+var EVENT_IOT = "app:iot";
+var EVENT_IOT_SUBSCRIBE = "app:iot:subscribe";
+
 var EVENT_FROM_CHAT = "app:from_chat";
 var EVENT_FROM_TRADE = "app:from_trade";
+var EVENT_FROM_IOT = "app:from_iot";
 
 //Colors
 var COLOR_BG = '#32323a';
@@ -32,11 +35,35 @@ var COLOR_LIGHT_GREEN = '#a9d86e';
 var COLOR_LIGHT_RED = '#ff6c60';
 var COLOR_DARK_GRAY = 'black';
 
+var userObject = getUserObject();
+
 // this sets the background color of the master UIView (when there are no windows/tab groups on it)
 Titanium.UI.setBackgroundColor('#000');
 
 // create tab group
 var tabGroup = Titanium.UI.createTabGroup({tintColor:'white', tabsBackgroundColor:COLOR_DARK_GRAY});
+
+Ti.App.addEventListener('paused',function(e){
+    Ti.API.info("app was paused from the foreground: "+JSON.stringify(e));
+    sendIOTMessage(getUserObject().fname, 'iOS device disconnected');
+});
+
+Ti.App.addEventListener('resumed', function(e){
+    Ti.API.info("app has resumed from the background: "+JSON.stringify(e));
+    setTimeout(function(){
+        sendIOTMessage(getUserObject().fname, 'iOS device connected');
+    }, 1500);
+    
+});
+
+Ti.App.addEventListener(EVENT_IOT_SUBSCRIBE, function(e) {
+    Ti.API.info('IOT subscribed');
+    Ti.App.fireEvent(EVENT_FROM_IOT, {from:userObject.fname, message:'iOS device connected'});
+});
+
+function sendIOTMessage(user, msg){
+    Ti.App.fireEvent(EVENT_FROM_IOT, {from:user, message:msg});
+}
 
 var totalRSSFeeds = 0;
 var initialisedRSS = false;
@@ -95,6 +122,39 @@ Ti.App.addEventListener(EVENT_CHAT, function(e) {
         tab1.setBadge(tab1.getBadge() + 1);
     }
 });
+
+Ti.App.addEventListener(EVENT_IOT, function(e) {
+    Ti.API.info('webview iot: '+JSON.stringify(e));
+    createIOTRow(e.message, e.time, e.from, false); 
+    //chatTableView.scrollToIndex(chatTableView.data[0].rows.length-1);
+    
+    
+    if(!tab4.active){
+        //showIOTNotification(e.from, e.message);
+        tab4.setBadge(tab4.getBadge() + 1);
+    }
+});
+
+function showIOTNotification(from, msg){
+    var notificationView = Ti.UI.createView({
+        backgroundColor:'black',
+        width:'100%',
+        height:50,
+        top:-50
+    });
+    
+    if(tab1.active){
+        win1.add(notificationView);
+    } else if(tab2.active){
+        win2.add(notificationView);
+    } else if(tab3.active){
+        win3.add(notificationView);
+    }
+    
+    notificationView.animate({top:10, duration:450}, function(){
+        
+    });
+}
 
 // create base UI tab and root window
 var win1 = Titanium.UI.createWindow({  
@@ -168,7 +228,7 @@ tradingButton.addEventListener('click', function(){
    win2.add(chartView);
 });
 
-win2.setLeftNavButton(tradingButton);
+//win2.setLeftNavButton(tradingButton);
 
 var tab2 = Titanium.UI.createTab({  
     icon:'images/iphone/tabs/chart_up.png',
@@ -219,11 +279,15 @@ if(ENABLE_TAB_IOT){
         window:win4
     });
     
+    tab4.addEventListener('focus', function(){
+       tab4.setBadge(); 
+    });
+    
+    win4.add(buildIOTView());
     tabGroup.addTab(tab4); 
 }
 
 //Check for persisted user
-var userObject = getUserObject();
 if(!userObject.fname){
     var initialWindow = buildInitialWindow();
 

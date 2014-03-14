@@ -5,13 +5,13 @@ function getUserObject(){
         obj = Ti.App.Properties.getObject('user');
     }
     
-    Ti.API.info('getUserObject() returns user with id '+obj.userId);
+    //Ti.API.info('getUserObject() returns user with id '+obj.userId);
     return obj; 
 }
 
 //Updates the global user object - only keys in obj are updated
 function saveUserObject(obj){
-    Ti.API.info('saveUserObject '+JSON.stringify(obj));
+    //Ti.API.info('saveUserObject '+JSON.stringify(obj));
     
     //image
     if(typeof obj.image_path != 'undefined'){

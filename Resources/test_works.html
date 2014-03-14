@@ -6,9 +6,16 @@ var EVENT_TRADE_INDEX = "app:trade_index";
 var EVENT_TRADE = "app:trade";
 var EVENT_CHAT = "app:chat";
 var EVENT_RSS = "app:rss";
+var EVENT_IOT = "app:iot";
+var EVENT_IOT_SUBSCRIBE = "app:iot:subscribe";
 
 var EVENT_FROM_CHAT = "app:from_chat";
 var EVENT_FROM_TRADE = "app:from_trade";
+var EVENT_FROM_IOT = "app:from_iot";
+
+Ti.App.addEventListener(EVENT_FROM_IOT, function(e) {
+    sendIOTMessage(e.from, e.message);
+});
 
 Ti.App.addEventListener(EVENT_FROM_CHAT, function(e) {
     sendMessage(e.from, e.message);
@@ -19,13 +26,23 @@ Ti.App.addEventListener(EVENT_FROM_TRADE, function(e) {
 });
 
 //channels
-var chatChannel, stockIndicesChannel, stockIndexTradesChannel, rssChannel = null;
+var chatChannel, stockIndicesChannel, stockIndexTradesChannel, rssChannel, iotChannel = null;
 
 // Create a session to our Nirvana server:
 var mySession = Nirvana.createSession({
     realms: ["http://showcase.um.softwareag.com"],
     username: "iOS" + Math.floor(Math.random() * 101)
 });
+
+/*
+mySession.on(Nirvana.Observe.DISCONNECT, function () {
+   sendMessage('jace', 'disCONNECT');
+});
+
+mySession.on(Nirvana.Observe.RECONNECT, function () {
+    sendMessage('jace', 'RECONNECT');
+});
+*/
 
 mySession.start();
 
@@ -34,17 +51,36 @@ chatChannel = mySession.getChannel("/fxdemo/chat");
 stockIndicesChannel = mySession.getChannel("/fxdemo/prices");
 stockIndexTradesChannel = mySession.getChannel("/fxdemo/trades");
 rssChannel = mySession.getChannel("/fxdemo/news");
+iotChannel = mySession.getChannel("/fxdemo/iot");
 
 //define callbacks
 stockIndicesChannel.on(Nirvana.Observe.DATA, stockIndexEventCB);
 stockIndexTradesChannel.on(Nirvana.Observe.DATA, stockIndexTradeEventCB);
 chatChannel.on(Nirvana.Observe.DATA, chatEventCB);
 rssChannel.on(Nirvana.Observe.DATA, rssEventCB);
+iotChannel.on(Nirvana.Observe.DATA, iotEventCB);
 
 chatChannel.subscribe();
 stockIndexTradesChannel.subscribe();
 stockIndicesChannel.subscribe();
 rssChannel.subscribe();
+iotChannel.subscribe();
+
+iotChannel.on(Nirvana.Observe.SUBSCRIBE, function(){
+    fireTitaniumEvent(EVENT_IOT_SUBSCRIBE, {drom:''});
+});
+
+//iot callback
+function iotEventCB(evt){
+    var dictionary = evt.getDictionary();
+    var message = dictionary.get("message");
+    var from = dictionary.get("sender");
+    var when = new Date(parseInt(evt.getEventAttributes().getTimeStamp(), 10));
+    var day = getDate(when);
+    var time = getTime(when);
+    
+    fireTitaniumEvent(EVENT_IOT, {from:from, message:message, time:time});
+}
 
 //rss callback
 function rssEventCB(event){
@@ -100,6 +136,17 @@ function stockIndexEventCB(event){
 // A function to publish events containing user-supplied data:
 function fireTitaniumEvent(eventType, data){
     Ti.App.fireEvent(eventType, data);
+}
+
+function sendIOTMessage(sender, message) {
+    var event = Nirvana.createEvent();
+    
+    var dictionary = event.getDictionary();
+    dictionary.putString("sender", sender);
+    dictionary.putString("message", message);
+    iotChannel.publish(event);
+   
+    return false;
 }
 
 function sendMessage(sender, message) {
