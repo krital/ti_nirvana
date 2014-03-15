@@ -16,6 +16,9 @@ if(Ti.Platform.displayCaps.platformHeight == 568){
 
 var IMAGE_PATH = 'images/iphone/';
 
+//Modules
+require('dk.napp.testflight').takeOff('2e45a618-6138-4443-8b05-22c5c3e0b66d');
+
 //Webview - titanium event types
 var EVENT_TRADE_INDEX = "app:trade_index";
 var EVENT_TRADE = "app:trade";

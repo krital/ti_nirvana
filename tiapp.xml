@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ti:app xmlns:ti="http://ti.appcelerator.org">
+    <property name="testflight.ios" type="string">2e45a618-6138-4443-8b05-22c5c3e0b66d</property>
     <id>com.veladia.beacon</id>
-    <name>messaging</name>
+    <name>TradeSpace</name>
     <version>1.0</version>
     <publisher>jace</publisher>
     <url>http://</url>
@@ -47,7 +48,9 @@
         </splash>
         <theme>default</theme>
     </mobileweb>
-    <modules/>
+    <modules>
+        <module platform="iphone">dk.napp.testflight</module>
+    </modules>
     <deployment-targets>
         <target device="android">false</target>
         <target device="blackberry">false</target>
