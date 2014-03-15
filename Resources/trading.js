@@ -312,7 +312,7 @@ function createTradingRow(indexTitle, bidAmount, offerAmount){
         
         var amountField = Ti.UI.createTextField({
             backgroundColor:'#fafafa',
-            value:'',
+            value:'10',
             hintText:'Unit amount',
             top:75,
             height:20,

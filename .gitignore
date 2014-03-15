@@ -3,3 +3,6 @@ build.log
 tmp
 ._*
 .DS_Store
+.settings/com.appcelerator.titanium.ios.core.prefs
+
+.settings/com.appcelerator.titanium.ios.core.prefs
